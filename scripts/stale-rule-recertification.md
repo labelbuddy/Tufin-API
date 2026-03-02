@@ -15,10 +15,7 @@ Run these queries and mutations in your Tufin GraphiQL interface:
 2. **Retrieve UIDs** — Run the rules query to collect UIDs (paginate if needed)
 3. **Submit** — Run the mutation once per batch of 300 UIDs
 
-Replace `YOUR_DEVICE_ID` with the numeric device ID from SecureTrack before running.
-Use the [get-devices](get-devices.md) script to look up your device ID.
-
-> **Device filter syntax:** Rules are filtered using `device.id='YOUR_DEVICE_ID'` — not `deviceId`.
+Replace `YOUR_DEVICE_NAME` with the device name exactly as it appears in SecureTrack.
 
 ---
 
@@ -28,14 +25,14 @@ Use the [get-devices](get-devices.md) script to look up your device ID.
 
 ```graphql
 {
-  rules(filter: "device.id='YOUR_DEVICE_ID' and timeLastHit before 182 days ago") {
+  rules(filter: "device.name='YOUR_DEVICE_NAME' and timeLastHit before 182 days ago") {
     count
   }
 }
 ```
 
 > **Include never-hit rules:** Change the filter to:
-> `"device.id='YOUR_DEVICE_ID' and (timeLastHit before 182 days ago or not timeLastHit exists)"`
+> `"device.name='YOUR_DEVICE_NAME' and (timeLastHit before 182 days ago or not timeLastHit exists)"`
 
 ---
 
@@ -45,7 +42,7 @@ Use the [get-devices](get-devices.md) script to look up your device ID.
 ```graphql
 {
   rules(
-    filter: "device.id='YOUR_DEVICE_ID' and timeLastHit before 182 days ago"
+    filter: "device.name='YOUR_DEVICE_NAME' and timeLastHit before 182 days ago"
     first: 500
     offset: 0
   ) {
@@ -63,7 +60,7 @@ Use the [get-devices](get-devices.md) script to look up your device ID.
 ```graphql
 {
   rules(
-    filter: "device.id='YOUR_DEVICE_ID' and timeLastHit before 182 days ago"
+    filter: "device.name='YOUR_DEVICE_NAME' and timeLastHit before 182 days ago"
     first: 500
     offset: 500
   ) {
@@ -126,7 +123,7 @@ mutation {
 
 ```graphql
 {
-  rules(filter: "device.id='YOUR_DEVICE_ID' and timeLastHit before 365 days ago") {
+  rules(filter: "device.name='YOUR_DEVICE_NAME' and timeLastHit before 365 days ago") {
     count
   }
 }
@@ -139,7 +136,7 @@ mutation {
 ```graphql
 {
   rules(
-    filter: "device.id='YOUR_DEVICE_ID' and timeLastHit before 365 days ago"
+    filter: "device.name='YOUR_DEVICE_NAME' and timeLastHit before 365 days ago"
     first: 500
     offset: 0
   ) {
@@ -192,7 +189,7 @@ mutation {
 
 ```graphql
 {
-  rules(filter: "device.id='YOUR_DEVICE_ID' and timeLastHit before 730 days ago") {
+  rules(filter: "device.name='YOUR_DEVICE_NAME' and timeLastHit before 730 days ago") {
     count
   }
 }
@@ -205,7 +202,7 @@ mutation {
 ```graphql
 {
   rules(
-    filter: "device.id='YOUR_DEVICE_ID' and timeLastHit before 730 days ago"
+    filter: "device.name='YOUR_DEVICE_NAME' and timeLastHit before 730 days ago"
     first: 500
     offset: 0
   ) {

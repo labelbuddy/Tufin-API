@@ -3,8 +3,9 @@
 Run these queries in your Tufin GraphiQL interface:
 `https://{tufin-server}/v2/api/sync/graphiql`
 
-Use this to look up a device's numeric `id` — required before running the
-[stale-rule-recertification](stale-rule-recertification.md) script.
+Use this to find the exact device name as it appears in SecureTrack — required before running the
+[stale-rule-recertification](stale-rule-recertification.md) script. Rules are filtered using
+`device.name='exact name here'`.
 
 ---
 
@@ -82,12 +83,12 @@ Use this to look up a device's numeric `id` — required before running the
 
 ## Response
 
-The `id` value in the response is the numeric device ID used in the rules query filter:
+The `name` value in the response is used directly in rule query filters:
 
 ```graphql
-# Use the id value from above in the rules query
+# Use the name value from above in the rules query
 {
-  rules(filter: "device.id='42' and timeLastHit before 182 days ago") {
+  rules(filter: "device.name='your-device-name' and timeLastHit before 182 days ago") {
     count
   }
 }
