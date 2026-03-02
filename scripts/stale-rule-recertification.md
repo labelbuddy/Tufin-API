@@ -3,19 +3,20 @@
 Run these queries and mutations in your Tufin GraphiQL interface:
 `https://{tufin-server}/v2/api/sync/graphiql`
 
+> **Note:** The labels after `query` and `mutation` (e.g. `query { ... }`) are just
+> for readability — they are not API calls. Only the field names inside the braces
+> (`rules`, `ruleOperations`, etc.) are the actual API calls.
+
 ---
 
 ## How to Use This Script
 
-**Workflow overview for each step:**
-
-1. **Count** — Run the count query to see how many rules match before doing anything
-2. **Retrieve UIDs** — Run the rules query to collect rule UIDs (paginate as needed for large firewalls)
-3. **Submit** — Run the mutation once per batch of 300 UIDs to create ticket drafts in SecureChange
-
-**Tip:** Use `dryRun: true` in the mutation first to validate your UIDs without creating a real ticket.
+1. **Count** — Run the count query to see how many rules match
+2. **Retrieve UIDs** — Run the rules query to collect UIDs (paginate if needed)
+3. **Submit** — Run the mutation once per batch of 300 UIDs
 
 Replace `YOUR_DEVICE_ID` with the numeric device ID from SecureTrack before running.
+Use the [get-devices](get-devices.md) script to look up your device ID.
 
 ---
 
@@ -24,7 +25,7 @@ Replace `YOUR_DEVICE_ID` with the numeric device ID from SecureTrack before runn
 ### 1a. Count matching rules
 
 ```graphql
-query CountRulesForRecertification {
+{
   rules(filter: "deviceId='YOUR_DEVICE_ID' and timeLastHit before 182 days ago") {
     count
   }
@@ -36,11 +37,11 @@ query CountRulesForRecertification {
 
 ---
 
-### 1b. Retrieve rule UIDs (run multiple times, adjusting `offset` for large firewalls)
+### 1b. Retrieve rule UIDs
 
 **Page 1 (rules 1–500):**
 ```graphql
-query GetStaleRulesForRecertification {
+{
   rules(
     filter: "deviceId='YOUR_DEVICE_ID' and timeLastHit before 182 days ago"
     first: 500
@@ -56,9 +57,9 @@ query GetStaleRulesForRecertification {
 }
 ```
 
-**Page 2 (rules 501–1000) — change offset:**
+**Page 2 (rules 501–1000) — increment offset by 500 each time:**
 ```graphql
-query GetStaleRulesForRecertification_Page2 {
+{
   rules(
     filter: "deviceId='YOUR_DEVICE_ID' and timeLastHit before 182 days ago"
     first: 500
@@ -74,14 +75,14 @@ query GetStaleRulesForRecertification_Page2 {
 }
 ```
 
-> Copy the `uid` values from the response. These are used in the mutation below.
+> Copy the `uid` values from the response. These go into the mutation below.
 
 ---
 
 ### 1c. Create recertification ticket draft (run once per batch of 300 UIDs)
 
 ```graphql
-mutation CreateRecertificationTicket {
+mutation {
   ruleOperations {
     createTicketDraft(
       workflowType: RECERTIFY_RULES
@@ -90,7 +91,6 @@ mutation CreateRecertificationTicket {
         "PASTE_UID_1_HERE",
         "PASTE_UID_2_HERE",
         "PASTE_UID_3_HERE"
-        # ... up to 300 UIDs
       ]
     ) {
       resultStatus {
@@ -107,7 +107,7 @@ mutation CreateRecertificationTicket {
 }
 ```
 
-> **Dry run test:** Add `dryRun: true` to validate UIDs without creating a ticket:
+> **Dry run:** Add `dryRun: true` to validate UIDs without creating a real ticket:
 > ```graphql
 > createTicketDraft(
 >   workflowType: RECERTIFY_RULES
@@ -118,14 +118,12 @@ mutation CreateRecertificationTicket {
 
 ---
 
----
-
 ## Step 2 — Disable (Rules not hit in 365+ days)
 
 ### 2a. Count matching rules
 
 ```graphql
-query CountRulesForDisable {
+{
   rules(filter: "deviceId='YOUR_DEVICE_ID' and timeLastHit before 365 days ago") {
     count
   }
@@ -137,7 +135,7 @@ query CountRulesForDisable {
 ### 2b. Retrieve rule UIDs
 
 ```graphql
-query GetStaleRulesForDisable {
+{
   rules(
     filter: "deviceId='YOUR_DEVICE_ID' and timeLastHit before 365 days ago"
     first: 500
@@ -158,7 +156,7 @@ query GetStaleRulesForDisable {
 ### 2c. Create disable ticket draft (run once per batch of 300 UIDs)
 
 ```graphql
-mutation CreateDisableTicket {
+mutation {
   ruleOperations {
     createTicketDraft(
       workflowType: DECOMMISSION_RULES
@@ -168,7 +166,6 @@ mutation CreateDisableTicket {
         "PASTE_UID_1_HERE",
         "PASTE_UID_2_HERE",
         "PASTE_UID_3_HERE"
-        # ... up to 300 UIDs
       ]
     ) {
       resultStatus {
@@ -187,14 +184,12 @@ mutation CreateDisableTicket {
 
 ---
 
----
-
 ## Step 3 — Delete (Rules not hit in 730+ days)
 
 ### 3a. Count matching rules
 
 ```graphql
-query CountRulesForDelete {
+{
   rules(filter: "deviceId='YOUR_DEVICE_ID' and timeLastHit before 730 days ago") {
     count
   }
@@ -206,7 +201,7 @@ query CountRulesForDelete {
 ### 3b. Retrieve rule UIDs
 
 ```graphql
-query GetStaleRulesForDelete {
+{
   rules(
     filter: "deviceId='YOUR_DEVICE_ID' and timeLastHit before 730 days ago"
     first: 500
@@ -227,7 +222,7 @@ query GetStaleRulesForDelete {
 ### 3c. Create delete ticket draft (run once per batch of 300 UIDs)
 
 ```graphql
-mutation CreateDeleteTicket {
+mutation {
   ruleOperations {
     createTicketDraft(
       workflowType: DECOMMISSION_RULES
@@ -237,7 +232,6 @@ mutation CreateDeleteTicket {
         "PASTE_UID_1_HERE",
         "PASTE_UID_2_HERE",
         "PASTE_UID_3_HERE"
-        # ... up to 300 UIDs
       ]
     ) {
       resultStatus {
@@ -258,22 +252,21 @@ mutation CreateDeleteTicket {
 
 ## Batching Guide
 
-When you have more than 300 matching rules, split them across multiple mutation runs:
+When you have more than 300 matching rules, run the mutation multiple times:
 
-| Batch | UIDs to include | Mutation subject |
-|-------|----------------|-----------------|
-| Batch 1 | UIDs 1–300 | `"Rule Recertification - FW01 - Batch 1"` |
-| Batch 2 | UIDs 301–600 | `"Rule Recertification - FW01 - Batch 2"` |
-| Batch 3 | UIDs 601–900 | `"Rule Recertification - FW01 - Batch 3"` |
+| Batch | UIDs to include | Change subject to |
+|-------|----------------|-------------------|
+| Batch 1 | UIDs 1–300 | `"... - Batch 1"` |
+| Batch 2 | UIDs 301–600 | `"... - Batch 2"` |
+| Batch 3 | UIDs 601–900 | `"... - Batch 3"` |
 
-The `invalidRules` section in each response will tell you if any UIDs were rejected and why
-(e.g., rule no longer exists, already in another ticket, etc.).
+The `invalidRules` field in each response shows any UIDs that were rejected and why.
 
 ---
 
 ## Reference
 
-| Topic | Reference doc |
-|-------|--------------|
+| Topic | Doc |
+|-------|-----|
 | `rules` query fields and TQL filtering | [graphql/rules/query-rules-by-last-hit.md](../graphql/rules/query-rules-by-last-hit.md) |
-| `createTicketDraft` mutation full spec | [graphql/ruleOperations/create-ticket-draft.md](../graphql/ruleOperations/create-ticket-draft.md) |
+| `createTicketDraft` full spec | [graphql/ruleOperations/create-ticket-draft.md](../graphql/ruleOperations/create-ticket-draft.md) |
