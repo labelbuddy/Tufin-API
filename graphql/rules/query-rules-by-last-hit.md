@@ -21,7 +21,7 @@ query {
       uid             # Rule UID — used as input to ruleOperations mutations
       id              # Internal numeric ID
       name            # Rule name
-      deviceId        # Numeric device ID
+      device.id        # Numeric device ID
       timeLastHit     # ISO 8601 datetime of last traffic hit (null if never hit)
       permissivenessLevel  # HIGH / MEDIUM / LOW
     }
@@ -33,13 +33,13 @@ query {
 
 | Goal | Filter expression |
 |------|-------------------|
-| All rules on a device | `deviceId='123'` |
+| All rules on a device | `device.id='123'` |
 | Not hit in 182+ days | `timeLastHit before 182 days ago` |
 | Not hit in 365+ days | `timeLastHit before 365 days ago` |
 | Not hit in 730+ days | `timeLastHit before 730 days ago` |
 | Never hit | `not timeLastHit exists` |
 | Stale or never hit | `timeLastHit before 182 days ago or not timeLastHit exists` |
-| Device + stale | `deviceId='123' and timeLastHit before 182 days ago` |
+| Device + stale | `device.id='123' and timeLastHit before 182 days ago` |
 
 Logical operators: `and`, `or`, `not`
 
@@ -55,7 +55,7 @@ Logical operators: `and`, `or`, `not`
 
 ```graphql
 query {
-  rules(filter: "deviceId='42' and timeLastHit before 182 days ago") {
+  rules(filter: "device.id='42' and timeLastHit before 182 days ago") {
     count
   }
 }
@@ -66,7 +66,7 @@ query {
 ```graphql
 query {
   rules(
-    filter: "deviceId='42' and timeLastHit before 182 days ago"
+    filter: "device.id='42' and timeLastHit before 182 days ago"
     first: 500
     offset: 0
   ) {

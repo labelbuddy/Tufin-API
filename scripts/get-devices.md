@@ -3,7 +3,7 @@
 Run these queries in your Tufin GraphiQL interface:
 `https://{tufin-server}/v2/api/sync/graphiql`
 
-Use this to look up a device's numeric `deviceId` — required before running the
+Use this to look up a device's numeric `id` — required before running the
 [stale-rule-recertification](stale-rule-recertification.md) script.
 
 ---
@@ -11,11 +11,11 @@ Use this to look up a device's numeric `deviceId` — required before running th
 ## Get all devices
 
 ```graphql
-query GetAllDevices {
+{
   devices {
     count
     values {
-      deviceId
+      id
       name
       vendor
       model
@@ -29,11 +29,11 @@ query GetAllDevices {
 ## Find a device by name
 
 ```graphql
-query FindDeviceByName {
+{
   devices(filter: "name='YOUR_DEVICE_NAME'") {
     count
     values {
-      deviceId
+      id
       name
       vendor
       model
@@ -47,11 +47,11 @@ query FindDeviceByName {
 ## Find devices by vendor
 
 ```graphql
-query FindDevicesByVendor {
+{
   devices(filter: "vendor='Check Point'") {
     count
     values {
-      deviceId
+      id
       name
       vendor
       model
@@ -65,11 +65,11 @@ query FindDevicesByVendor {
 ## Find devices by name pattern (contains)
 
 ```graphql
-query FindDevicesByNamePattern {
+{
   devices(filter: "name contains 'FW'") {
     count
     values {
-      deviceId
+      id
       name
       vendor
       model
@@ -82,10 +82,13 @@ query FindDevicesByNamePattern {
 
 ## Response
 
-The `deviceId` in the response is the numeric ID used as input to other queries and mutations,
-for example:
+The `id` value in the response is the numeric device ID used in the rules query filter:
 
 ```graphql
-# Use deviceId in the rules query
-rules(filter: "deviceId='42' and timeLastHit before 182 days ago")
+# Use the id value from above in the rules query
+{
+  rules(filter: "device.id='42' and timeLastHit before 182 days ago") {
+    count
+  }
+}
 ```
